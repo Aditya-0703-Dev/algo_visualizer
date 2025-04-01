@@ -1,5 +1,5 @@
 import Header from "./header/Header";
 import Container from "./container/Container";
-import Visualizer from "./Visualizer";
+import BubbleSortVisualizer from "./BubbleSortVisualizer";
 
-export { Header, Container, Visualizer };
+export { Header, Container, BubbleSortVisualizer };
