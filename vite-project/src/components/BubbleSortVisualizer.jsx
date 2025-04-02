@@ -24,7 +24,7 @@ function BubbleSortVisualizer({ data }) {
 			logContainer.scrollTo({
 				top: logContainer.scrollHeight,
 				behavior: "smooth", // Enables smooth scrolling
-			  });
+			});
 		}
 	}, [logs]);
 
@@ -156,7 +156,7 @@ function BubbleSortVisualizer({ data }) {
 					<Slider defaultValue={[animationSpeedRef.current]} max={1500} step={100} min={500} className={"[&>:last-child>span]:h-6 [&>:last-child>span]:w-2.5 [&>:last-child>span]:border-[3px] [&>:last-child>span]:border-background [&>:last-child>span]:bg-primary [&>:last-child>span]:ring-offset-0"} onValueChange={(value) => animationSpeedRef.current=2000 - value[0]}/>
 				</div>
 			</div>
-			<div id="log-container" className="bg-gray-900 text-white p-4 rounded-lg max-h-60 overflow-auto mt-3 w-full">
+			<div id="log-container" className="bg-gray-900 text-white p-4 rounded-lg max-h-70 overflow-auto mt-3 w-full">
 				<div className="bg-slate-600 p-1 top-0 left-0 w-auto inline-block z-1 sticky">
 					<h2>Output Log</h2>
 				</div>
@@ -170,5 +170,5 @@ function BubbleSortVisualizer({ data }) {
 
 export default BubbleSortVisualizer;
 
-//TODO: 
+//TODO: Boxed output logged
 //Maybe: StepTracking 
