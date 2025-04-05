@@ -6,41 +6,41 @@ import { Button } from "@/components/ui/button";
 
 const bubbleSortAlgorithms = {
 	"tab-1": `function bubbleSort(arr) {
-for (let i = 0; i < arr.length - 1; i++) {
-	for (let j = 0; j < arr.length - i - 1; j++) {
-		if (arr[j] > arr[j + 1]) {
-			[arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+	for (let i = 0; i < arr.length - 1; i++) {
+		for (let j = 0; j < arr.length - i - 1; j++) {
+			if (arr[j] > arr[j + 1]) {
+				[arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+			}
 		}
 	}
-}
-return arr;
+	return arr;
 }`,
 	"tab-2": `void bubbleSort(int arr[], int n) {
-for (int i = 0; i < n - 1; i++) {
-	for (int j = 0; j < n - i - 1; j++) {
-		if (arr[j] > arr[j + 1]) {
-			int temp = arr[j];
-			arr[j] = arr[j + 1];
-			arr[j + 1] = temp;
+	for (int i = 0; i < n - 1; i++) {
+		for (int j = 0; j < n - i - 1; j++) {
+			if (arr[j] > arr[j + 1]) {
+				int temp = arr[j];
+				arr[j] = arr[j + 1];
+				arr[j + 1] = temp;
+			}
 		}
 	}
-}
 }`,
 	"tab-3": `void bubbleSort(int arr[], int n) {
-for (int i = 0; i < n - 1; i++) {
-	for (int j = 0; j < n - i - 1; j++) {
-		if (arr[j] > arr[j + 1]) {
-			swap(arr[j], arr[j + 1]);
+	for (int i = 0; i < n - 1; i++) {
+		for (int j = 0; j < n - i - 1; j++) {
+			if (arr[j] > arr[j + 1]) {
+				swap(arr[j], arr[j + 1]);
+			}
 		}
 	}
-}
 }`,
 	"tab-4": `def bubble_sort(arr):
-n = len(arr)
-for i in range(n - 1):
-	for j in range(n - i - 1):
-		if arr[j] > arr[j + 1]:
-			arr[j], arr[j + 1] = arr[j + 1], arr[j]`,
+	n = len(arr)
+	for i in range(n - 1):
+		for j in range(n - i - 1):
+			if arr[j] > arr[j + 1]:
+				arr[j], arr[j + 1] = arr[j + 1], arr[j]`,
 };
 
 function BubbleSort() {
@@ -167,7 +167,7 @@ function BubbleSort() {
 									>
 										{copied === key ? "Copied to clipboard!" : "Copy"}
 									</Button>
-									<pre className="bg-gray-900 text-green-400 p-4 rounded-md overflow-x-auto">
+									<pre className="bg-gray-900 text-green-400 p-4 rounded-md overflow-x-auto rounded-tl-none">
 										{code}
 									</pre>
 								</div>

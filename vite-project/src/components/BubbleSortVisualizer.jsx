@@ -4,6 +4,7 @@ import { Container } from "./componentIndex";
 import { Play, Pause, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { drawBars, renderBoxes } from "../utils/sortingUtils";
 
 function BubbleSortVisualizer({ data }) {
 	const [isSorting, setIsSorting] = useState(false);
@@ -12,10 +13,13 @@ function BubbleSortVisualizer({ data }) {
 	const animationSpeedRef = useRef(1000);
 	const isPlayingRef = useRef(false);
 	const dataRef = useRef([...data]);
-	const animationRef = useRef(null);
+	const boxedArrayRef = useRef(null);
+	const barChartRef = useRef(null);
+	const abortRef = useRef(false);
 
 	useEffect(() => {
-        drawBars();
+        drawBars(barChartRef, data, width, height, margin, colorScale);
+		renderBoxes(boxedArrayRef, data, boxWidth, spacing, colorScale);
 	}, [data]);
 
 	useEffect(() => {
@@ -28,47 +32,29 @@ function BubbleSortVisualizer({ data }) {
 		}
 	}, [logs]);
 
+	//color scale
+	const uniqueData = [...new Set(data)];
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(uniqueData);
+
+	//chart attributes
 	const width = 600;
 	const height = 300;
 	const margin = { top: 20, right: 20, bottom: 20, left: 20 };
 	let yScale;
 
-	const drawBars = () => {
+	//boxes attributes
+	const boxWidth = 49;
+    const spacing = 5;
 
-		const svg = d3.select("#visualizer-svg").attr("width", width).attr("height", height).style("display", "block").style("margin", "auto");
-
-		svg.selectAll("*").remove();
-		yScale = d3.scaleLinear().domain([0, d3.max(data)]).range([height - margin.bottom, margin.top]);
-        const xScale = d3.scaleBand().domain(data.map((_, i) => i)).range([margin.left, width - margin.right]).padding(0.1);
-
-        const uniqueData = [...new Set(data)];
-        const colorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(uniqueData);
-
-        svg.append("g")
-            .attr("transform", `translate(0,${height - margin.bottom})`)
-            .call(d3.axisBottom(xScale).tickFormat((d) => d))
-            .attr("color", "white");
-
-        svg.append("g")
-            .attr("transform", `translate(${margin.left},0)`)
-            .call(d3.axisLeft(yScale))
-            .attr("color", "white");
-
-		svg
-			.selectAll("rect")
-			.data(dataRef.current)
-			.enter()
-			.append("rect")
-			.attr("x", (_, i) => xScale(i))
-			.attr("y", (d) => yScale(d))
-			.attr("width", xScale.bandwidth())
-			.attr("height", (d) => height - margin.bottom - yScale(d))
-			.attr("fill", (_,i) => colorScale(i));
-	};
-
+	const delay = async (ms = animationSpeedRef.current) => {
+		if(abortRef.current) return;
+		await new Promise((res) => setTimeout(res, ms));
+	}
+	
 	const bubbleSort = async () => {
 		if (isSorting) return;
 		setIsSorting(true);
+		abortRef.current = false;
 		setIsPlaying(true);
 		isPlayingRef.current = true;
 
@@ -78,35 +64,54 @@ function BubbleSortVisualizer({ data }) {
 		addLogs("Initial Array: [" + arr.join(", ") + "]");
 		for (let i = 0; i < arr.length - 1; i++) {
 			for (let j = 0; j < arr.length - i - 1; j++) {
+				if (abortRef.current) return;
 				while(!isPlayingRef.current) {
-					await new Promise((resolve) => setTimeout(resolve, 100));
+					if (abortRef.current) return;
+					await delay(100);
 				};
 
-				d3.select("#visualizer-svg")
+				d3.select(barChartRef.current)
                 .selectAll("rect")
                 .attr("fill", (_, index) => (index === j || index === j + 1 ? "orange" : "steelblue"));
+
+				d3.select(boxedArrayRef.current)
+				.selectAll("g rect")
+				.attr("fill", (_, index) => (index === j || index === j + 1 ? "orange" : "steelblue"));
 				
-				await new Promise((resolve) => setTimeout(resolve, animationSpeedRef.current-200));
+				if (abortRef.current) return;
+				await delay(animationSpeedRef.current-200);
 
 				if (arr[j] > arr[j + 1]) {
 					addLogs(`Swapping [${arr[j]} and ${arr[j + 1]}]`);
 					[arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
 					dataRef.current = [...arr];
 
-					await new Promise((resolve) => setTimeout(resolve, animationSpeedRef.current));
+					await delay()
 					
-					animationRef.current = d3.select("#visualizer-svg").selectAll("rect")
+					d3.select(barChartRef.current)
+						.selectAll("rect")
 						.data(arr)
 						.transition()
 						.duration(100)
 						.attr("y", (d) => yScale(d))
 						.attr("height", (d) => height - margin.bottom - yScale(d));
+					
+					d3.select(boxedArrayRef.current)
+						.selectAll("g")
+						.data(arr)
+						.select("text")
+						.transition()
+						.duration(500)
+						.text((d) => d);
+
+					await delay(animationSpeedRef.current-200);
 				}
 			}
 		}
 
 		addLogs("Sorted Array: [" + arr.join(", ") + "]");
-		d3.select("#visualizer-svg").selectAll("rect").attr("fill", d3.scaleOrdinal(d3.schemeCategory10));
+		d3.select(barChartRef.current).selectAll("rect").attr("fill", d3.scaleOrdinal(d3.schemeCategory10));
+		d3.select(boxedArrayRef.current).selectAll("g rect").attr("fill", "#55e463");
 
 		setIsSorting(false);
 		setIsPlaying(false);
@@ -125,12 +130,17 @@ function BubbleSortVisualizer({ data }) {
 	}
 
 	const handleRestart = () => {
-		d3.select("#visualizer-svg").selectAll("rect").interrupt();
+		abortRef.current = true;
+		d3.select(barChartRef.current).selectAll("rect").interrupt();
+		d3.active(document.querySelector("rect"))?.end();
+		d3.select(boxedArrayRef.current).selectAll("g rect").attr("fill", (_,i) => colorScale(i));
 		isPlayingRef.current = false;
+		setIsPlaying(false);
 		setIsSorting(false);
 		dataRef.current = [...data];
 		setLogs([]);
-		drawBars();
+		drawBars(barChartRef, dataRef.current, width, height, margin, colorScale);
+		renderBoxes(boxedArrayRef, dataRef.current, boxWidth, spacing, colorScale);
 	}
 
 	const addLogs = (log) => {
@@ -141,7 +151,9 @@ function BubbleSortVisualizer({ data }) {
 		<Container>
 			<div className="bg-slate-600 rounded-lg w-full overflow-x-auto pl-3">
 				<div className="min-w-max">
-					<svg id="visualizer-svg" className="w-full"></svg>
+					<svg ref={barChartRef} className="w-full"></svg>
+					<br />
+					<svg ref={boxedArrayRef}></svg>
 				</div>
 			</div>
 			<div className="bg-slate-600 mt-3 rounded-lg w-full flex p-2 justify-evenly">
@@ -170,5 +182,5 @@ function BubbleSortVisualizer({ data }) {
 
 export default BubbleSortVisualizer;
 
-//TODO: Boxed output logged
+//TODO:
 //Maybe: StepTracking 
